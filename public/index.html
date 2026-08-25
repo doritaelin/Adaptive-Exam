@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Adaptive Exam Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex items-center justify-center p-4">
+
+<div class="w-full max-w-xl bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl p-6 sm:p-8">
+
+    <!-- 1. AUTH SCREEN (SIGN IN / SIGN UP TABS) -->
+    <div id="authScreen">
+        <div class="text-center mb-6">
+            <h1 class="text-3xl font-black text-sky-400">🤖 AI Adaptive Exam</h1>
+            <p class="text-slate-400 text-xs mt-1 uppercase tracking-widest">Student Portal & Progress Engine</p>
+        </div>
+
+        <!-- Toggle Tabs -->
+        <div class="flex bg-slate-950 p-1.5 rounded-xl border border-slate-800 mb-6">
+            <button id="loginTabBtn" onclick="switchAuthTab('login')" class="flex-1 py-2.5 rounded-lg text-sm font-bold bg-sky-500 text-slate-950 transition">
+                Sign In
+            </button>
+            <button id="registerTabBtn" onclick="switchAuthTab('register')" class="flex-1 py-2.5 rounded-lg text-sm font-bold text-slate-400 hover:text-white transition">
+                Create New Account
+            </button>
+        </div>
+
+        <!-- Sign In Form -->
+        <form id="loginForm" onsubmit="doLogin(event)" class="space-y-4">
+            <div>
+                <label class="block text-xs font-bold text-slate-400 mb-1">USERNAME</label>
+                <input type="text" id="loginUsername" required class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white focus:outline-none focus:border-sky-400" placeholder="Enter your username">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-slate-400 mb-1">PASSWORD</label>
+                <input type="password" id="loginPassword" required class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white focus:outline-none focus:border-sky-400" placeholder="••••••••">
+            </div>
+            <button type="submit" class="w-full bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold py-3.5 rounded-lg transition text-base">
+                Sign In
+            </button>
+        </form>
+
+        <!-- Create Account Form -->
+        <form id="registerForm" onsubmit="doRegister(event)" class="space-y-4 hidden">
+            <div>
+                <label class="block text-xs font-bold text-slate-400 mb-1">CHOOSE USERNAME</label>
+                <input type="text" id="regUsername" required minlength="3" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white focus:outline-none focus:border-sky-400" placeholder="e.g. rahul123">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-slate-400 mb-1">CREATE PASSWORD</label>
+                <input type="password" id="regPassword" required minlength="4" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white focus:outline-none focus:border-sky-400" placeholder="At least 4 characters">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-slate-400 mb-1">CONFIRM PASSWORD</label>
+                <input type="password" id="regConfirmPassword" required minlength="4" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white focus:outline-none focus:border-sky-400" placeholder="Re-type password">
+            </div>
+            <button type="submit" class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold py-3.5 rounded-lg transition text-base">
+                Register & Save Account
+            </button>
+        </form>
+
+        <p id="authMessage" class="text-xs text-center mt-4"></p>
+    </div>
+
+    <!-- 2. STUDENT DASHBOARD (PROGRESS & HISTORY) -->
+    <div id="dashScreen" class="hidden">
+        <div class="flex justify-between items-center pb-4 border-b border-slate-800 mb-6">
+            <div>
+                <h2 class="text-xl font-bold text-white" id="welcomeUser">Student Profile</h2>
+                <span class="text-xs text-sky-400">Adaptive AI Profile Active</span>
+            </div>
+            <button onclick="logout()" class="text-xs bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-md text-slate-300 transition">
+                Sign Out
+            </button>
+        </div>
+
+        <!-- Student Lifetime Stats -->
+        <div class="grid grid-cols-2 gap-4 mb-6">
+            <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 text-center">
+                <div class="text-xs text-slate-400">Exams Attempted</div>
+                <div class="text-2xl font-black text-sky-400 mt-1" id="statAttempts">0</div>
+            </div>
+            <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 text-center">
+                <div class="text-xs text-slate-400">Average Accuracy</div>
+                <div class="text-2xl font-black text-emerald-400 mt-1" id="statAvgAcc">0%</div>
+            </div>
+        </div>
+
+        <!-- Previous Attempts List -->
+        <div class="mb-6">
+            <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Your Past Exam Attempts</div>
+            <div id="historyList" class="space-y-2 max-h-40 overflow-y-auto pr-1">
+                <div class="text-xs text-slate-500 text-center py-4">No tests taken yet. Start your first exam below!</div>
+            </div>
+        </div>
+
+        <button onclick="startQuiz()" class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold py-3.5 rounded-xl transition text-base flex items-center justify-center space-x-2">
+            <span>🚀 Start New Adaptive Exam</span>
+        </button>
+    </div>
+
+    <!-- 3. EXAM QUIZ SCREEN -->
+    <div id="examScreen" class="hidden">
+        <div class="flex justify-between items-center pb-3 border-b border-slate-800 mb-4">
+            <span class="text-sm text-slate-400">Question <b id="qNum" class="text-white">1</b>/5</span>
+            <span id="diffTag" class="px-2.5 py-1 rounded text-xs font-bold uppercase">Medium</span>
+            <span class="text-sm text-amber-400 font-bold">⭐ Score: <span id="scoreVal">0</span></span>
+        </div>
+
+        <div class="text-xs text-sky-400 font-bold tracking-wider uppercase mb-1" id="qTopic">C Basics</div>
+        <h3 class="text-lg font-bold text-slate-100 mb-6" id="qText">Question goes here...</h3>
+
+        <div id="optionsList" class="space-y-3 mb-6"></div>
+
+        <button onclick="submitAnswer()" class="w-full bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold py-3.5 rounded-lg transition text-md">
+            Submit & Adapt ➔
+        </button>
+    </div>
+
+    <!-- 4. RESULTS / REPORT SCREEN -->
+    <div id="reportScreen" class="hidden">
+        <div class="text-center mb-4">
+            <h2 class="text-2xl font-black text-white">🎉 Exam Complete!</h2>
+            <p class="text-xs text-slate-400">Result saved to your personal history file</p>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4 mb-4">
+            <div class="bg-slate-950 p-4 rounded-xl text-center border border-slate-800">
+                <div class="text-xs text-slate-400">Final Score</div>
+                <div class="text-2xl font-black text-sky-400" id="finalScore">0</div>
+            </div>
+            <div class="bg-slate-950 p-4 rounded-xl text-center border border-slate-800">
+                <div class="text-xs text-slate-400">Accuracy</div>
+                <div class="text-2xl font-black text-emerald-400" id="finalAcc">0%</div>
+            </div>
+        </div>
+
+        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 mb-4">
+            <div class="text-xs text-slate-400 text-center mb-2 font-bold uppercase tracking-wider">Adaptive Difficulty Shift Path</div>
+            <canvas id="diffChart" class="max-h-36"></canvas>
+        </div>
+
+        <div class="bg-sky-950/40 border border-sky-800/40 p-4 rounded-xl mb-6">
+            <div class="text-xs font-bold text-sky-400 uppercase mb-1">🤖 AI Diagnostic Assessment</div>
+            <p class="text-sm text-slate-200" id="aiFeedbackText"></p>
+        </div>
+
+        <button onclick="backToDash()" class="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold py-3.5 rounded-lg transition">
+            Back to Dashboard & History
+        </button>
+    </div>
+
+</div>
+
+<script>
+    let chart = null;
+    let exam = {
+        user: "",
+        diff: 2,
+        count: 0,
+        max: 5,
+        score: 0,
+        easyHits: 0,
+        medHits: 0,
+        hardHits: 0,
+        doneIds: [],
+        diffPath: [2],
+        activeQ: null
+    };
+
+    function switchAuthTab(tab) {
+        const msg = document.getElementById('authMessage');
+        msg.innerText = "";
+        if (tab === 'login') {
+            document.getElementById('loginForm').classList.remove('hidden');
+            document.getElementById('registerForm').classList.add('hidden');
+            document.getElementById('loginTabBtn').className = "flex-1 py-2.5 rounded-lg text-sm font-bold bg-sky-500 text-slate-950 transition";
+            document.getElementById('registerTabBtn').className = "flex-1 py-2.5 rounded-lg text-sm font-bold text-slate-400 hover:text-white transition";
+        } else {
+            document.getElementById('loginForm').classList.add('hidden');
+            document.getElementById('registerForm').classList.remove('hidden');
+            document.getElementById('registerTabBtn').className = "flex-1 py-2.5 rounded-lg text-sm font-bold bg-emerald-500 text-slate-950 transition";
+            document.getElementById('loginTabBtn').className = "flex-1 py-2.5 rounded-lg text-sm font-bold text-slate-400 hover:text-white transition";
+        }
+    }
+
+    async function doRegister(e) {
+        e.preventDefault();
+        const u = document.getElementById('regUsername').value.trim();
+        const p = document.getElementById('regPassword').value;
+        const cp = document.getElementById('regConfirmPassword').value;
+        const msg = document.getElementById('authMessage');
+
+        if (p !== cp) {
+            msg.className = "text-xs text-rose-400 text-center mt-4";
+            msg.innerText = "Passwords do not match!";
+            return;
+        }
+
+        const res = await fetch('/api/register', {
+            method: 'POST',
+            body: JSON.stringify({ username: u, password: p })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+            msg.className = "text-xs text-emerald-400 text-center mt-4";
+            msg.innerText = data.message + " Switching to Login...";
+            document.getElementById('registerForm').reset();
+            setTimeout(() => {
+                switchAuthTab('login');
+                document.getElementById('loginUsername').value = u;
+            }, 1200);
+        } else {
+            msg.className = "text-xs text-rose-400 text-center mt-4";
+            msg.innerText = data.message;
+        }
+    }
+
+    async function doLogin(e) {
+        e.preventDefault();
+        const u = document.getElementById('loginUsername').value.trim();
+        const p = document.getElementById('loginPassword').value;
+        const msg = document.getElementById('authMessage');
+
+        const res = await fetch('/api/login', {
+            method: 'POST',
+            body: JSON.stringify({ username: u, password: p })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+            exam.user = data.username;
+            document.getElementById('authScreen').classList.add('hidden');
+            document.getElementById('dashScreen').classList.remove('hidden');
+            document.getElementById('welcomeUser').innerText = `Welcome, ${exam.user}!`;
+            loadUserHistory();
+        } else {
+            msg.className = "text-xs text-rose-400 text-center mt-4";
+            msg.innerText = data.message || "Invalid credentials.";
+        }
+    }
+
+    async function loadUserHistory() {
+        const res = await fetch('/api/history', {
+            method: 'POST',
+            body: JSON.stringify({ student: exam.user })
+        });
+        const data = await res.json();
+
+        const listDiv = document.getElementById('historyList');
+        const attempts = data.history || [];
+
+        document.getElementById('statAttempts').innerText = attempts.length;
+
+        if (attempts.length === 0) {
+            document.getElementById('statAvgAcc').innerText = "0%";
+            listDiv.innerHTML = `<div class="text-xs text-slate-500 text-center py-4">No tests taken yet. Start your first exam below!</div>`;
+            return;
+        }
+
+        let totalAcc = 0;
+        listDiv.innerHTML = '';
+
+        attempts.forEach((item, idx) => {
+            totalAcc += item.accuracy;
+            listDiv.innerHTML += `
+                <div class="flex justify-between items-center bg-slate-950 p-2.5 rounded-lg border border-slate-800 text-xs">
+                    <span class="text-slate-300 font-bold">Attempt #${idx + 1}</span>
+                    <span class="text-sky-400 font-semibold">${item.score} pts</span>
+                    <span class="text-emerald-400 font-bold">${item.accuracy}%</span>
+                </div>
+            `;
+        });
+
+        document.getElementById('statAvgAcc').innerText = (totalAcc / attempts.length).toFixed(0) + "%";
+    }
+
+    function startQuiz() {
+        exam.diff = 2;
+        exam.count = 0;
+        exam.score = 0;
+        exam.easyHits = 0;
+        exam.medHits = 0;
+        exam.hardHits = 0;
+        exam.doneIds = [];
+        exam.diffPath = [2];
+
+        document.getElementById('dashScreen').classList.add('hidden');
+        document.getElementById('examScreen').classList.remove('hidden');
+        nextQ();
+    }
+
+    async function nextQ() {
+        if (exam.count >= exam.max) {
+            showReport();
+            return;
+        }
+
+        const res = await fetch('/api/question', {
+            method: 'POST',
+            body: JSON.stringify({
+                difficulty: exam.diff,
+                excluded: exam.doneIds.join(',')
+            })
+        });
+        const data = await res.json();
+
+        if (!data.available) {
+            showReport();
+            return;
+        }
+
+        exam.activeQ = data;
+        exam.doneIds.push(data.id);
+        exam.count++;
+
+        document.getElementById('qNum').innerText = exam.count;
+        document.getElementById('scoreVal').innerText = exam.score;
+        document.getElementById('qTopic').innerText = data.topic;
+        document.getElementById('qText').innerText = `${exam.count}. ${data.text}`;
+
+        const badge = document.getElementById('diffTag');
+        if (data.difficulty === 1) {
+            badge.className = "px-2.5 py-1 rounded text-xs font-bold uppercase bg-emerald-950 text-emerald-400 border border-emerald-800";
+            badge.innerText = "Easy (+10 pts)";
+        } else if (data.difficulty === 2) {
+            badge.className = "px-2.5 py-1 rounded text-xs font-bold uppercase bg-amber-950 text-amber-400 border border-amber-800";
+            badge.innerText = "Medium (+20 pts)";
+        } else {
+            badge.className = "px-2.5 py-1 rounded text-xs font-bold uppercase bg-rose-950 text-rose-400 border border-rose-800";
+            badge.innerText = "Hard (+30 pts)";
+        }
+
+        const optsDiv = document.getElementById('optionsList');
+        optsDiv.innerHTML = '';
+        data.options.forEach((opt, idx) => {
+            optsDiv.innerHTML += `
+                <label class="flex items-center p-3 rounded-lg border border-slate-800 bg-slate-950 hover:border-slate-700 cursor-pointer transition">
+                    <input type="radio" name="opt" value="${idx + 1}" class="mr-3">
+                    <span class="text-sm">${opt}</span>
+                </label>
+            `;
+        });
+    }
+
+    async function submitAnswer() {
+        const choice = document.querySelector('input[name="opt"]:checked');
+        if (!choice) {
+            alert("Please select an answer!");
+            return;
+        }
+
+        const res = await fetch('/api/submit', {
+            method: 'POST',
+            body: JSON.stringify({
+                id: exam.activeQ.id,
+                selected: choice.value,
+                difficulty: exam.activeQ.difficulty
+            })
+        });
+        const ans = await res.json();
+
+        exam.score += ans.points;
+        if (ans.correct) {
+            if (exam.activeQ.difficulty === 1) exam.easyHits++;
+            if (exam.activeQ.difficulty === 2) exam.medHits++;
+            if (exam.activeQ.difficulty === 3) exam.hardHits++;
+        }
+
+        exam.diff = ans.nextDifficulty;
+        exam.diffPath.push(exam.diff);
+        nextQ();
+    }
+
+    async function showReport() {
+        const totalRight = exam.easyHits + exam.medHits + exam.hardHits;
+        const acc = ((totalRight / exam.max) * 100).toFixed(0);
+
+        const res = await fetch('/api/report', {
+            method: 'POST',
+            body: JSON.stringify({
+                student: exam.user,
+                score: exam.score,
+                total: exam.max,
+                easy_correct: exam.easyHits,
+                med_correct: exam.medHits,
+                hard_correct: exam.hardHits,
+                accuracy: acc
+            })
+        });
+        const rep = await res.json();
+
+        document.getElementById('examScreen').classList.add('hidden');
+        document.getElementById('reportScreen').classList.remove('hidden');
+
+        document.getElementById('finalScore').innerText = exam.score;
+        document.getElementById('finalAcc').innerText = `${acc}%`;
+        document.getElementById('aiFeedbackText').innerText = rep.ai_feedback;
+
+        confetti({ particleCount: 80, spread: 60 });
+
+        const ctx = document.getElementById('diffChart').getContext('2d');
+        if (chart) chart.destroy();
+        chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['Start', 'Q1', 'Q2', 'Q3', 'Q4', 'Q5'],
+                datasets: [{
+                    label: 'Difficulty Path',
+                    data: exam.diffPath,
+                    borderColor: '#38bdf8',
+                    tension: 0.3,
+                    pointBackgroundColor: '#38bdf8'
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        min: 1,
+                        max: 3,
+                        ticks: {
+                            stepSize: 1,
+                            callback: v => v === 1 ? 'Easy' : (v === 2 ? 'Med' : 'Hard'),
+                            color: '#94a3b8'
+                        }
+                    }
+                },
+                plugins: { legend: { display: false } }
+            }
+        });
+    }
+
+    function backToDash() {
+        document.getElementById('reportScreen').classList.add('hidden');
+        document.getElementById('dashScreen').classList.remove('hidden');
+        loadUserHistory();
+    }
+
+    function logout() {
+        exam.user = "";
+        document.getElementById('dashScreen').classList.add('hidden');
+        document.getElementById('authScreen').classList.remove('hidden');
+        switchAuthTab('login');
+    }
+</script>
+</body>
+</html>
