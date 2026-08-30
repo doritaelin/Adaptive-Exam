@@ -3,20 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Adaptive Exam Portal</title>
+
+    <!-- SEO Meta Tags for Google -->
+    <title>AI Adaptive Exam - Computerized Adaptive Assessment Platform</title>
+    <meta name="title" content="AI Adaptive Exam - Computerized Adaptive Assessment Platform">
+    <meta name="description" content="AI-driven adaptive examination portal with dynamic question difficulty calibration, proctoring security, NLP grading, and comprehensive analytics.">
+    <meta name="keywords" content="adaptive exam, online testing, computerized adaptive test, automated grading, CAT assessment">
+    <meta name="robots" content="index, follow">
+
+    <!-- CSS & JS Libraries -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex items-center justify-center p-4">
 
-<div class="w-full max-w-xl bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl p-6 sm:p-8">
+<div class="w-full max-w-2xl bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl p-6 sm:p-8 relative overflow-hidden">
 
-    <!-- 1. AUTH SCREEN (SIGN IN / SIGN UP TABS) -->
+    <!-- Anti-Cheat Violation Banner -->
+    <div id="securityBanner" class="hidden absolute top-0 left-0 right-0 bg-rose-600/90 text-white text-xs font-bold px-4 py-2 text-center animate-pulse z-50">
+        ⚠️ Security Warning: Suspicious activity logged (Tab Switch / Copy-Paste)!
+    </div>
+
+    <!-- 1. AUTH SCREEN (SIGN IN / SIGN UP WITH ROLES) -->
     <div id="authScreen">
         <div class="text-center mb-6">
             <h1 class="text-3xl font-black text-sky-400">🤖 AI Adaptive Exam</h1>
-            <p class="text-slate-400 text-xs mt-1 uppercase tracking-widest">Student Portal & Progress Engine</p>
+            <p class="text-slate-400 text-xs mt-1 uppercase tracking-widest">Multi-Role Testing & Proctoring Engine</p>
         </div>
 
         <!-- Toggle Tabs -->
@@ -25,7 +38,7 @@
                 Sign In
             </button>
             <button id="registerTabBtn" onclick="switchAuthTab('register')" class="flex-1 py-2.5 rounded-lg text-sm font-bold text-slate-400 hover:text-white transition">
-                Create New Account
+                Create Account
             </button>
         </div>
 
@@ -44,11 +57,23 @@
             </button>
         </form>
 
-        <!-- Create Account Form -->
+        <!-- Create Account Form (With Roles) -->
         <form id="registerForm" onsubmit="doRegister(event)" class="space-y-4 hidden">
             <div>
+                <label class="block text-xs font-bold text-slate-400 mb-1">FULL NAME</label>
+                <input type="text" id="regName" required class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white focus:outline-none focus:border-sky-400" placeholder="e.g. John Doe">
+            </div>
+            <div>
                 <label class="block text-xs font-bold text-slate-400 mb-1">CHOOSE USERNAME</label>
-                <input type="text" id="regUsername" required minlength="3" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white focus:outline-none focus:border-sky-400" placeholder="e.g. rahul123">
+                <input type="text" id="regUsername" required minlength="3" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white focus:outline-none focus:border-sky-400" placeholder="e.g. student_01">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-slate-400 mb-1">SELECT ROLE</label>
+                <select id="regRole" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white focus:outline-none focus:border-sky-400">
+                    <option value="1">Student</option>
+                    <option value="2">Instructor</option>
+                    <option value="3">Administrator</option>
+                </select>
             </div>
             <div>
                 <label class="block text-xs font-bold text-slate-400 mb-1">CREATE PASSWORD</label>
@@ -66,44 +91,46 @@
         <p id="authMessage" class="text-xs text-center mt-4"></p>
     </div>
 
-    <!-- 2. STUDENT DASHBOARD (PROGRESS & HISTORY) -->
+    <!-- 2. STUDENT / INSTRUCTOR DASHBOARD -->
     <div id="dashScreen" class="hidden">
         <div class="flex justify-between items-center pb-4 border-b border-slate-800 mb-6">
             <div>
-                <h2 class="text-xl font-bold text-white" id="welcomeUser">Student Profile</h2>
-                <span class="text-xs text-sky-400">Adaptive AI Profile Active</span>
+                <h2 class="text-xl font-bold text-white" id="welcomeUser">Profile</h2>
+                <span class="text-xs text-sky-400" id="userRoleBadge">Student Profile Active</span>
             </div>
             <button onclick="logout()" class="text-xs bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-md text-slate-300 transition">
                 Sign Out
             </button>
         </div>
 
-        <!-- Student Lifetime Stats -->
-        <div class="grid grid-cols-2 gap-4 mb-6">
-            <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 text-center">
-                <div class="text-xs text-slate-400">Exams Attempted</div>
-                <div class="text-2xl font-black text-sky-400 mt-1" id="statAttempts">0</div>
+        <div class="grid grid-cols-3 gap-3 mb-6">
+            <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-center">
+                <div class="text-xs text-slate-400">Attempts</div>
+                <div class="text-xl font-black text-sky-400 mt-1" id="statAttempts">0</div>
             </div>
-            <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 text-center">
-                <div class="text-xs text-slate-400">Average Accuracy</div>
-                <div class="text-2xl font-black text-emerald-400 mt-1" id="statAvgAcc">0%</div>
+            <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-center">
+                <div class="text-xs text-slate-400">Avg Accuracy</div>
+                <div class="text-xl font-black text-emerald-400 mt-1" id="statAvgAcc">0%</div>
+            </div>
+            <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-center">
+                <div class="text-xs text-slate-400">Security Flags</div>
+                <div class="text-xl font-black text-rose-400 mt-1" id="statTotalFlags">0</div>
             </div>
         </div>
 
-        <!-- Previous Attempts List -->
         <div class="mb-6">
-            <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Your Past Exam Attempts</div>
-            <div id="historyList" class="space-y-2 max-h-40 overflow-y-auto pr-1">
-                <div class="text-xs text-slate-500 text-center py-4">No tests taken yet. Start your first exam below!</div>
+            <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Past Exam Performance & Knowledge Audits</div>
+            <div id="historyList" class="space-y-2 max-h-48 overflow-y-auto pr-1">
+                <div class="text-xs text-slate-500 text-center py-4">No tests recorded yet. Start your first exam below!</div>
             </div>
         </div>
 
         <button onclick="startQuiz()" class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold py-3.5 rounded-xl transition text-base flex items-center justify-center space-x-2">
-            <span>🚀 Start New Adaptive Exam</span>
+            <span>🚀 Start Adaptive Exam</span>
         </button>
     </div>
 
-    <!-- 3. EXAM QUIZ SCREEN -->
+    <!-- 3. EXAM QUIZ SCREEN (ANTI-CHEAT ACTIVE) -->
     <div id="examScreen" class="hidden">
         <div class="flex justify-between items-center pb-3 border-b border-slate-800 mb-4">
             <span class="text-sm text-slate-400">Question <b id="qNum" class="text-white">1</b>/5</span>
@@ -111,46 +138,62 @@
             <span class="text-sm text-amber-400 font-bold">⭐ Score: <span id="scoreVal">0</span></span>
         </div>
 
-        <div class="text-xs text-sky-400 font-bold tracking-wider uppercase mb-1" id="qTopic">C Basics</div>
-        <h3 class="text-lg font-bold text-slate-100 mb-6" id="qText">Question goes here...</h3>
+        <div class="flex justify-between items-center mb-2">
+            <span class="text-xs text-sky-400 font-bold tracking-wider uppercase" id="qTopic">C Basics</span>
+            <span id="secFlagCount" class="text-xs text-rose-400 font-semibold">Flags: 0</span>
+        </div>
+        
+        <h3 class="text-lg font-bold text-slate-100 mb-6" id="qText">Question loading...</h3>
 
-        <div id="optionsList" class="space-y-3 mb-6"></div>
+        <!-- Dynamic Container for MCQ options or NLP Short Answer input -->
+        <div id="questionContainer" class="mb-6"></div>
 
         <button onclick="submitAnswer()" class="w-full bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold py-3.5 rounded-lg transition text-md">
-            Submit & Adapt ➔
+            Submit Answer ➔
         </button>
     </div>
 
-    <!-- 4. RESULTS / REPORT SCREEN -->
+    <!-- 4. COMPREHENSIVE ANALYTICS & REPORT SCREEN -->
     <div id="reportScreen" class="hidden">
         <div class="text-center mb-4">
             <h2 class="text-2xl font-black text-white">🎉 Exam Complete!</h2>
-            <p class="text-xs text-slate-400">Result saved to your personal history file</p>
+            <p class="text-xs text-slate-400">Diagnostic report and weakness map generated</p>
         </div>
 
-        <div class="grid grid-cols-2 gap-4 mb-4">
-            <div class="bg-slate-950 p-4 rounded-xl text-center border border-slate-800">
+        <div class="grid grid-cols-3 gap-3 mb-4">
+            <div class="bg-slate-950 p-3 rounded-xl text-center border border-slate-800">
                 <div class="text-xs text-slate-400">Final Score</div>
-                <div class="text-2xl font-black text-sky-400" id="finalScore">0</div>
+                <div class="text-xl font-black text-sky-400" id="finalScore">0</div>
             </div>
-            <div class="bg-slate-950 p-4 rounded-xl text-center border border-slate-800">
+            <div class="bg-slate-950 p-3 rounded-xl text-center border border-slate-800">
                 <div class="text-xs text-slate-400">Accuracy</div>
-                <div class="text-2xl font-black text-emerald-400" id="finalAcc">0%</div>
+                <div class="text-xl font-black text-emerald-400" id="finalAcc">0%</div>
+            </div>
+            <div class="bg-slate-950 p-3 rounded-xl text-center border border-slate-800">
+                <div class="text-xs text-slate-400">Security Flags</div>
+                <div class="text-xl font-black text-rose-400" id="finalFlags">0</div>
             </div>
         </div>
 
         <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 mb-4">
-            <div class="text-xs text-slate-400 text-center mb-2 font-bold uppercase tracking-wider">Adaptive Difficulty Shift Path</div>
-            <canvas id="diffChart" class="max-h-36"></canvas>
+            <div class="text-xs text-slate-400 text-center mb-2 font-bold uppercase tracking-wider">Adaptive Difficulty Progression</div>
+            <canvas id="diffChart" class="max-h-32"></canvas>
         </div>
 
-        <div class="bg-sky-950/40 border border-sky-800/40 p-4 rounded-xl mb-6">
-            <div class="text-xs font-bold text-sky-400 uppercase mb-1">🤖 AI Diagnostic Assessment</div>
-            <p class="text-sm text-slate-200" id="aiFeedbackText"></p>
+        <!-- Weakness Gap & AI Recommendations -->
+        <div class="space-y-3 mb-6">
+            <div class="bg-sky-950/40 border border-sky-800/40 p-3 rounded-xl">
+                <div class="text-xs font-bold text-sky-400 uppercase mb-1">🤖 AI Diagnostic Feedback</div>
+                <p class="text-xs text-slate-200" id="aiFeedbackText"></p>
+            </div>
+            <div class="bg-emerald-950/40 border border-emerald-800/40 p-3 rounded-xl">
+                <div class="text-xs font-bold text-emerald-400 uppercase mb-1">🎯 Study Recommendation & Weakness Gap</div>
+                <p class="text-xs text-slate-200" id="aiRecText"></p>
+            </div>
         </div>
 
         <button onclick="backToDash()" class="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold py-3.5 rounded-lg transition">
-            Back to Dashboard & History
+            Back to Dashboard
         </button>
     </div>
 
@@ -160,6 +203,7 @@
     let chart = null;
     let exam = {
         user: "",
+        role: 1,
         diff: 2,
         count: 0,
         max: 5,
@@ -167,11 +211,55 @@
         easyHits: 0,
         medHits: 0,
         hardHits: 0,
+        securityFlags: 0,
+        lastWeakTopic: "",
         doneIds: [],
         diffPath: [2],
-        activeQ: null
+        activeQ: null,
+        isExamActive: false
     };
 
+    // ==========================================
+    // MODULE 4: AI EXAM SECURITY & PROCTORING
+    // ==========================================
+    window.addEventListener('blur', () => {
+        if (exam.isExamActive) logSecurityViolation('TAB_SWITCH / WINDOW_BLUR');
+    });
+
+    document.addEventListener('copy', (e) => {
+        if (exam.isExamActive) {
+            e.preventDefault();
+            logSecurityViolation('COPY_ATTEMPT');
+        }
+    });
+
+    document.addEventListener('paste', (e) => {
+        if (exam.isExamActive) {
+            e.preventDefault();
+            logSecurityViolation('PASTE_ATTEMPT');
+        }
+    });
+
+    async function logSecurityViolation(type) {
+        exam.securityFlags++;
+        document.getElementById('secFlagCount').innerText = `Flags: ${exam.securityFlags}`;
+        
+        const banner = document.getElementById('securityBanner');
+        banner.innerText = `⚠️ Security Flag #${exam.securityFlags}: ${type} Detected!`;
+        banner.classList.remove('hidden');
+        setTimeout(() => banner.classList.add('hidden'), 3000);
+
+        try {
+            await fetch('/api/security/violation', {
+                method: 'POST',
+                body: JSON.stringify({ student: exam.user, violation: type })
+            });
+        } catch (err) {}
+    }
+
+    // ==========================================
+    // MODULE 1: AUTH & ACCESS MANAGEMENT
+    // ==========================================
     function switchAuthTab(tab) {
         const msg = document.getElementById('authMessage');
         msg.innerText = "";
@@ -191,6 +279,8 @@
     async function doRegister(e) {
         e.preventDefault();
         const u = document.getElementById('regUsername').value.trim();
+        const n = document.getElementById('regName').value.trim();
+        const r = document.getElementById('regRole').value;
         const p = document.getElementById('regPassword').value;
         const cp = document.getElementById('regConfirmPassword').value;
         const msg = document.getElementById('authMessage');
@@ -203,7 +293,7 @@
 
         const res = await fetch('/api/register', {
             method: 'POST',
-            body: JSON.stringify({ username: u, password: p })
+            body: JSON.stringify({ username: u, name: n, role: r, password: p })
         });
         const data = await res.json();
 
@@ -235,9 +325,14 @@
 
         if (data.success) {
             exam.user = data.username;
+            exam.role = data.role;
             document.getElementById('authScreen').classList.add('hidden');
             document.getElementById('dashScreen').classList.remove('hidden');
-            document.getElementById('welcomeUser').innerText = `Welcome, ${exam.user}!`;
+            document.getElementById('welcomeUser').innerText = `${data.name || data.username}`;
+            
+            const roleLabels = { 1: "Student Profile", 2: "Instructor Portal", 3: "Administrator" };
+            document.getElementById('userRoleBadge').innerText = roleLabels[data.role] || "User Profile";
+            
             loadUserHistory();
         } else {
             msg.className = "text-xs text-rose-400 text-center mt-4";
@@ -245,6 +340,9 @@
         }
     }
 
+    // ==========================================
+    // MODULE 6: COMPREHENSIVE REPORTING
+    // ==========================================
     async function loadUserHistory() {
         const res = await fetch('/api/history', {
             method: 'POST',
@@ -259,27 +357,40 @@
 
         if (attempts.length === 0) {
             document.getElementById('statAvgAcc').innerText = "0%";
+            document.getElementById('statTotalFlags').innerText = "0";
             listDiv.innerHTML = `<div class="text-xs text-slate-500 text-center py-4">No tests taken yet. Start your first exam below!</div>`;
             return;
         }
 
         let totalAcc = 0;
+        let totalFlags = 0;
         listDiv.innerHTML = '';
 
         attempts.forEach((item, idx) => {
             totalAcc += item.accuracy;
+            totalFlags += item.security_flags || 0;
             listDiv.innerHTML += `
-                <div class="flex justify-between items-center bg-slate-950 p-2.5 rounded-lg border border-slate-800 text-xs">
-                    <span class="text-slate-300 font-bold">Attempt #${idx + 1}</span>
-                    <span class="text-sky-400 font-semibold">${item.score} pts</span>
-                    <span class="text-emerald-400 font-bold">${item.accuracy}%</span>
+                <div class="bg-slate-950 p-3 rounded-lg border border-slate-800 text-xs space-y-1">
+                    <div class="flex justify-between items-center font-bold">
+                        <span class="text-slate-300">Attempt #${idx + 1}</span>
+                        <span class="text-sky-400">${item.score} pts</span>
+                        <span class="text-emerald-400">${item.accuracy}%</span>
+                    </div>
+                    <div class="flex justify-between text-[11px] text-slate-400">
+                        <span>Weakness: <b class="text-amber-400">${item.weakness || 'General'}</b></span>
+                        <span class="text-rose-400 font-semibold">Flags: ${item.security_flags || 0}</span>
+                    </div>
                 </div>
             `;
         });
 
         document.getElementById('statAvgAcc').innerText = (totalAcc / attempts.length).toFixed(0) + "%";
+        document.getElementById('statTotalFlags').innerText = totalFlags;
     }
 
+    // ==========================================
+    // MODULE 2 & 3: CAT TEST GENERATOR & EXAM
+    // ==========================================
     function startQuiz() {
         exam.diff = 2;
         exam.count = 0;
@@ -287,11 +398,14 @@
         exam.easyHits = 0;
         exam.medHits = 0;
         exam.hardHits = 0;
+        exam.securityFlags = 0;
         exam.doneIds = [];
         exam.diffPath = [2];
+        exam.isExamActive = true;
 
         document.getElementById('dashScreen').classList.add('hidden');
         document.getElementById('examScreen').classList.remove('hidden');
+        document.getElementById('secFlagCount').innerText = "Flags: 0";
         nextQ();
     }
 
@@ -336,32 +450,52 @@
             badge.innerText = "Hard (+30 pts)";
         }
 
-        const optsDiv = document.getElementById('optionsList');
-        optsDiv.innerHTML = '';
-        data.options.forEach((opt, idx) => {
-            optsDiv.innerHTML += `
-                <label class="flex items-center p-3 rounded-lg border border-slate-800 bg-slate-950 hover:border-slate-700 cursor-pointer transition">
-                    <input type="radio" name="opt" value="${idx + 1}" class="mr-3">
-                    <span class="text-sm">${opt}</span>
-                </label>
+        const container = document.getElementById('questionContainer');
+        container.innerHTML = '';
+
+        // Module 5: Objective MCQ vs NLP Short-Answer UI
+        if (data.type === 2) {
+            // Short Answer
+            container.innerHTML = `
+                <div class="space-y-2">
+                    <label class="block text-xs font-bold text-sky-400">SHORT ANSWER (NLP EVALUATED):</label>
+                    <textarea id="shortAnswerInput" rows="3" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white focus:outline-none focus:border-sky-400" placeholder="Type your explanation here..."></textarea>
+                </div>
             `;
-        });
+        } else {
+            // MCQ
+            data.options.forEach((opt, idx) => {
+                container.innerHTML += `
+                    <label class="flex items-center p-3 rounded-lg border border-slate-800 bg-slate-950 hover:border-slate-700 cursor-pointer transition mb-2">
+                        <input type="radio" name="opt" value="${idx + 1}" class="mr-3">
+                        <span class="text-sm">${opt}</span>
+                    </label>
+                `;
+            });
+        }
     }
 
     async function submitAnswer() {
-        const choice = document.querySelector('input[name="opt"]:checked');
-        if (!choice) {
-            alert("Please select an answer!");
-            return;
+        let payload = {
+            id: exam.activeQ.id,
+            difficulty: exam.activeQ.difficulty,
+            selected: 0,
+            text_answer: ""
+        };
+
+        if (exam.activeQ.type === 2) {
+            const txt = document.getElementById('shortAnswerInput').value.trim();
+            if (!txt) { alert("Please type your response!"); return; }
+            payload.text_answer = txt;
+        } else {
+            const choice = document.querySelector('input[name="opt"]:checked');
+            if (!choice) { alert("Please select an option!"); return; }
+            payload.selected = parseInt(choice.value);
         }
 
         const res = await fetch('/api/submit', {
             method: 'POST',
-            body: JSON.stringify({
-                id: exam.activeQ.id,
-                selected: choice.value,
-                difficulty: exam.activeQ.difficulty
-            })
+            body: JSON.stringify(payload)
         });
         const ans = await res.json();
 
@@ -370,6 +504,8 @@
             if (exam.activeQ.difficulty === 1) exam.easyHits++;
             if (exam.activeQ.difficulty === 2) exam.medHits++;
             if (exam.activeQ.difficulty === 3) exam.hardHits++;
+        } else {
+            exam.lastWeakTopic = ans.topic;
         }
 
         exam.diff = ans.nextDifficulty;
@@ -378,6 +514,7 @@
     }
 
     async function showReport() {
+        exam.isExamActive = false;
         const totalRight = exam.easyHits + exam.medHits + exam.hardHits;
         const acc = ((totalRight / exam.max) * 100).toFixed(0);
 
@@ -390,7 +527,9 @@
                 easy_correct: exam.easyHits,
                 med_correct: exam.medHits,
                 hard_correct: exam.hardHits,
-                accuracy: acc
+                accuracy: acc,
+                security_flags: exam.securityFlags,
+                weakness_topic: exam.lastWeakTopic || "Fundamentals"
             })
         });
         const rep = await res.json();
@@ -400,7 +539,9 @@
 
         document.getElementById('finalScore').innerText = exam.score;
         document.getElementById('finalAcc').innerText = `${acc}%`;
+        document.getElementById('finalFlags').innerText = exam.securityFlags;
         document.getElementById('aiFeedbackText').innerText = rep.ai_feedback;
+        document.getElementById('aiRecText').innerText = rep.recommendation;
 
         confetti({ particleCount: 80, spread: 60 });
 
@@ -444,6 +585,7 @@
 
     function logout() {
         exam.user = "";
+        exam.isExamActive = false;
         document.getElementById('dashScreen').classList.add('hidden');
         document.getElementById('authScreen').classList.remove('hidden');
         switchAuthTab('login');
