@@ -1,2 +1,3 @@
 *.exe
 cloudflared.exe
+*.dat
